@@ -2,11 +2,13 @@
 <html>
 <head>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; width: 250px; padding: 15px; }
-    input { width: 70%; padding: 6px; }
-    button { padding: 6px; cursor: pointer; }
-    .friend-row { display: flex; justify-content: space-between; margin-top: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    body { font-family: 'Segoe UI', sans-serif; width: 360px; padding: 15px; }
+    input { width: 65%; padding: 6px; }
+    button { padding: 6px; cursor: pointer; margin-bottom: 4px; }
+    .friend-row { display: flex; justify-content: space-between; margin-top: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; align-items: center; }
     .count { font-weight: bold; color: #4CAF50; }
+    #graphArea { margin-top: 15px; display: none; }
+    canvas { width: 100%; max-width: 330px; height: 250px; }
   </style>
 </head>
 <body>
@@ -14,10 +16,18 @@
   <div id="inputArea">
     <input type="text" id="username" placeholder="Enter username" />
     <button id="addBtn">Add</button>
+    <button id="importBtn" title="Import friends from your logged-in Codeforces account">Import My Friends</button>
   </div>
   <div id="friendList"></div>
   <hr>
+  <button id="graphToggle">Show Graph</button>
   <button id="clearBtn" style="width: 100%;">Clear All</button>
+  <div id="graphArea">
+    <canvas id="graphCanvas"></canvas>
+  </div>
+
+  <!-- Local Chart.js -->
+  <script src="chart.min.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

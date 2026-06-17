@@ -1,15 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Codeforces Daily Tracker",
-  "version": "1.0",
-  "description": "Tracks how many Codeforces problems you solved today.",
+  "version": "1.1",
+  "description": "Tracks your friends' daily solved problems, with rank colours and a 7-day graph.",
   "action": {
     "default_popup": "popup.html"
   },
-  "permissions": [
-    "storage"
-  ],
-  "host_permissions": [
-    "https://codeforces.com/*"
-  ]
+  "permissions": ["storage"],
+  "host_permissions": ["https://codeforces.com/*"]
 }
