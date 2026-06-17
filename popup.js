@@ -1,67 +1,99 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const friendList = document.getElementById('friendList');
-  const usernameInput = document.getElementById('username');
+  const input = document.getElementById('username');
   const addBtn = document.getElementById('addBtn');
   const clearBtn = document.getElementById('clearBtn');
+  const friendList = document.getElementById('friendList');
 
-  function updateUI() {
-    chrome.storage.local.get(['friends'], (result) => {
-      const friends = result.friends || [];
-      friendList.innerHTML = '';
-      
-      friends.forEach((friend, index) => {
-        const div = document.createElement('div');
-        div.className = 'friend-row';
-        div.innerHTML = `<span>${friend.username}</span> <span class="count" id="c-${index}">...</span>`;
-        friendList.appendChild(div);
-        fetchData(friend, index);
-      });
+  // Initialize: Load friends from Chrome storage
+  const loadFriends = () => {
+    chrome.storage.local.get({ friends: [] }, (result) => {
+      friendList.innerHTML = ''; 
+      result.friends.forEach(friend => addFriendToUI(friend));
     });
-  }
+  };
 
-  async function fetchData(friend, index) {
-    try {
-      const response = await fetch(`https://codeforces.com/profile/${friend.username}`);
-      const text = await response.text();
-      const match = text.match(/<div class="_UserActivityFrame_counterValue">(\d+)\s+problems<\/div>/);
-      
-      if (match) {
-        const currentTotal = parseInt(match[1], 10);
-        const today = new Date().toDateString();
-        const display = document.getElementById(`c-${index}`);
+  // Add a new friend to the tracker
+  addBtn.addEventListener('click', () => {
+    const username = input.value.trim();
+    if (!username) return;
 
-        if (friend.date !== today) {
-          friend.date = today;
-          friend.initialCount = currentTotal;
-          // Update stored object
-          chrome.storage.local.get(['friends'], (res) => {
-            res.friends[index] = friend;
-            chrome.storage.local.set({ friends: res.friends });
-          });
-        }
-        display.textContent = (currentTotal - friend.initialCount) + " solved";
+    chrome.storage.local.get({ friends: [] }, (result) => {
+      const friends = result.friends;
+      if (!friends.includes(username)) {
+        friends.push(username);
+        chrome.storage.local.set({ friends }, () => {
+          input.value = '';
+          addFriendToUI(username);
+        });
+      } else {
+         alert('User is already in your tracker!');
       }
-    } catch (e) {
-      document.getElementById(`c-${index}`).textContent = "Err";
+    });
+  });
+
+  // Clear the whole list
+  clearBtn.addEventListener('click', () => {
+    chrome.storage.local.set({ friends: [] }, () => {
+      friendList.innerHTML = '';
+    });
+  });
+
+  // Create UI elements and fetch the solved count
+  async function addFriendToUI(username) {
+    const row = document.createElement('div');
+    row.className = 'friend-row';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = username;
+
+    const countSpan = document.createElement('span');
+    countSpan.className = 'count';
+    countSpan.textContent = '...'; // Loading state
+
+    row.appendChild(nameSpan);
+    row.appendChild(countSpan);
+    friendList.appendChild(row);
+
+    try {
+      const count = await fetchTodaySolved(username);
+      countSpan.textContent = count;
+    } catch (err) {
+      countSpan.textContent = 'Err';
+      countSpan.style.color = 'red';
     }
   }
 
-  addBtn.addEventListener('click', () => {
-    const user = usernameInput.value.trim();
-    if (!user) return;
-    chrome.storage.local.get(['friends'], (result) => {
-      let friends = result.friends || [];
-      if (!friends.find(f => f.username === user)) {
-        friends.push({ username: user, date: null, initialCount: null });
-        chrome.storage.local.set({ friends }, updateUI);
-        usernameInput.value = '';
+  // Core API Logic: Fetch unique 'Accepted' problems for today
+  async function fetchTodaySolved(username) {
+    // Fetch the 100 most recent submissions (usually more than enough for one day)
+    const res = await fetch(`https://codeforces.com/api/user.status?handle=${username}&from=1&count=100`);
+    const data = await res.json();
+
+    if (data.status !== 'OK') throw new Error('API Error');
+
+    // Calculate the start of "today" in local time (Unix timestamp in seconds)
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() / 1000;
+
+    const uniqueProblems = new Set();
+
+    for (const sub of data.result) {
+      // Submissions are ordered newest first. Stop checking if we hit yesterday.
+      if (sub.creationTimeSeconds < startOfDay) {
+         break; 
       }
-    });
-  });
 
-  clearBtn.addEventListener('click', () => {
-    chrome.storage.local.set({ friends: [] }, updateUI);
-  });
+      // 'OK' is the Codeforces verdict for Accepted
+      if (sub.verdict === 'OK') {
+         // Create a unique ID for the problem (e.g., "1500-A")
+         const problemId = `${sub.problem.contestId}-${sub.problem.index}`;
+         uniqueProblems.add(problemId);
+      }
+    }
 
-  updateUI();
+    return uniqueProblems.size;
+  }
+
+  // Run on startup
+  loadFriends();
 });
