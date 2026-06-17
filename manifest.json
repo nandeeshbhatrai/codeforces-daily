@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Codeforces Daily Tracker",
+  "version": "1.0",
+  "description": "Tracks how many Codeforces problems you solved today.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://codeforces.com/*"
+  ]
+}

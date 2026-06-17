@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; width: 250px; padding: 15px; }
+    input { width: 70%; padding: 6px; }
+    button { padding: 6px; cursor: pointer; }
+    .friend-row { display: flex; justify-content: space-between; margin-top: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    .count { font-weight: bold; color: #4CAF50; }
+  </style>
+</head>
+<body>
+  <h3>CF Tracker</h3>
+  <div id="inputArea">
+    <input type="text" id="username" placeholder="Enter username" />
+    <button id="addBtn">Add</button>
+  </div>
+  <div id="friendList"></div>
+  <hr>
+  <button id="clearBtn" style="width: 100%;">Clear All</button>
+  <script src="popup.js"></script>
+</body>
+</html>
